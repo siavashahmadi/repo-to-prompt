@@ -1,0 +1,46 @@
+{
+  "name": "repo-to-prompt",
+  "version": "1.0.0",
+  "description": "Pack a local code repository into a single, token-optimized text file for LLM context",
+  "type": "module",
+  "bin": {
+    "repo-to-prompt": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clipboardy": "^4.0.0",
+    "commander": "^12.0.0",
+    "fast-glob": "^3.3.2",
+    "ignore": "^5.3.1",
+    "micromatch": "^4.0.8"
+  },
+  "devDependencies": {
+    "@types/micromatch": "^4.0.9",
+    "@types/node": "^20.12.7",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.3",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "context",
+    "repository",
+    "cli",
+    "gpt",
+    "claude",
+    "prompt"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siavashahmadi/repo-to-prompt"
+  }
+}

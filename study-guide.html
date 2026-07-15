@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>repo-to-prompt — Study Guide</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --sidebar-bg: #161b27;
+      --card-bg: #1a2035;
+      --border: #2a3450;
+      --accent: #4f8ef7;
+      --accent2: #7c3aed;
+      --accent3: #10b981;
+      --accent4: #f59e0b;
+      --accent5: #ef4444;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --text-dim: #4a5568;
+      --code-bg: #0d1117;
+      --sidebar-w: 260px;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      padding: 0 0 40px;
+      z-index: 100;
+    }
+
+    #sidebar .logo {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    #sidebar .logo h1 {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    #sidebar .logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    #sidebar nav a {
+      display: block;
+      padding: 7px 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    #sidebar nav a:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(79,142,247,0.05);
+    }
+    #sidebar nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(79,142,247,0.08);
+    }
+    #sidebar nav .section-label {
+      padding: 16px 20px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* ── MAIN ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 900px;
+      padding: 48px 56px;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      margin-bottom: 72px;
+    }
+    section h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    section h2 span.tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-left: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .tag-arch  { background: rgba(79,142,247,0.15); color: var(--accent); }
+    .tag-dsa   { background: rgba(124,58,237,0.15); color: var(--accent2); }
+    .tag-sys   { background: rgba(16,185,129,0.15); color: var(--accent3); }
+    .tag-tech  { background: rgba(245,158,11,0.15); color: var(--accent4); }
+    .tag-resume{ background: rgba(239,68,68,0.15); color: var(--accent5); }
+
+    section h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 32px 0 12px;
+    }
+    section h3::before {
+      content: '▸ ';
+      color: var(--accent);
+      font-size: 12px;
+    }
+    section p {
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      max-width: 720px;
+    }
+    section ul, section ol {
+      color: var(--text-muted);
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+    section li {
+      margin-bottom: 6px;
+    }
+    section strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── CODE ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      margin: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #a5b4fc;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    /* Syntax token colors */
+    .kw  { color: #c084fc; } /* keywords */
+    .fn  { color: #60a5fa; } /* function names */
+    .str { color: #86efac; } /* strings */
+    .cm  { color: #4a5568; } /* comments */
+    .num { color: #fdba74; } /* numbers */
+    .ty  { color: #f9a8d4; } /* types */
+    .op  { color: #94a3b8; } /* operators */
+    .var { color: #e2e8f0; } /* variables */
+    .dec { color: #fbbf24; } /* decorator/annotation */
+
+    /* ── CARDS ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .card .card-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .card-accent-blue  { border-top: 2px solid var(--accent); }
+    .card-accent-purple{ border-top: 2px solid var(--accent2); }
+    .card-accent-green { border-top: 2px solid var(--accent3); }
+    .card-accent-amber { border-top: 2px solid var(--accent4); }
+    .card-accent-red   { border-top: 2px solid var(--accent5); }
+
+    /* ── PIPELINE ── */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 24px 0;
+    }
+    .pipe-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .pipe-step .pipe-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 36px;
+      flex-shrink: 0;
+    }
+    .pipe-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    .pipe-line {
+      width: 2px;
+      flex: 1;
+      min-height: 20px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .pipe-step:last-child .pipe-line { display: none; }
+    .pipe-body {
+      padding: 4px 0 24px;
+      flex: 1;
+    }
+    .pipe-body h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .pipe-body .file-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(79,142,247,0.1);
+      padding: 1px 7px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .pipe-body p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      max-width: 580px;
+    }
+    .n1 { background: rgba(79,142,247,0.15); color: var(--accent); }
+    .n2 { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .n3 { background: rgba(124,58,237,0.15); color: var(--accent2); }
+    .n4 { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .n5 { background: rgba(16,185,129,0.15); color: var(--accent3); }
+    .n6 { background: rgba(20,184,166,0.15); color: #2dd4bf; }
+    .n7 { background: rgba(245,158,11,0.15); color: var(--accent4); }
+    .n8 { background: rgba(239,68,68,0.15); color: var(--accent5); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(79,142,247,0.06);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .callout.warn { border-color: var(--accent4); background: rgba(245,158,11,0.06); }
+    .callout.green { border-color: var(--accent3); background: rgba(16,185,129,0.06); }
+    .callout strong { color: var(--text); }
+
+    /* ── COMPARISON TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(42,52,80,0.5);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+    td:first-child { color: var(--text); font-family: var(--font-mono); font-size: 12px; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── QUIZ ── */
+    .quiz {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .quiz h4 { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+    .quiz-q {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-left: 4px;
+      border-left: 2px solid var(--accent2);
+      padding-left: 10px;
+    }
+    .quiz-a {
+      display: none;
+      font-size: 13px;
+      color: var(--accent3);
+      margin: 4px 0 14px 10px;
+      padding: 8px 12px;
+      background: rgba(16,185,129,0.06);
+      border-radius: 6px;
+    }
+    .quiz-q.open + .quiz-a { display: block; }
+    .quiz-q { cursor: pointer; }
+    .quiz-q::before { content: 'Q: '; color: var(--accent2); font-weight: 700; }
+
+    /* ── HERO ── */
+    #hero {
+      margin-bottom: 56px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    #hero .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    #hero h1 {
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    #hero h1 span { color: var(--accent); }
+    #hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin-bottom: 20px;
+    }
+    .tag-pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin: 0 6px 6px 0;
+      font-weight: 500;
+    }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 2;
+      padding: 20px 24px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 16px 0;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a4860; }
+
+    @media (max-width: 800px) {
+      #sidebar { display: none; }
+      #main { margin-left: 0; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ SIDEBAR -->
+<aside id="sidebar">
+  <div class="logo">
+    <h1>repo-to-prompt</h1>
+    <p>Architecture Study Guide</p>
+  </div>
+  <nav>
+    <div class="section-label">Overview</div>
+    <a href="#overview">What It Does</a>
+    <a href="#pipeline">Execution Pipeline</a>
+
+    <div class="section-label">Architecture</div>
+    <a href="#modules">Module Breakdown</a>
+    <a href="#data-flow">Data Flow</a>
+    <a href="#patterns">Design Patterns</a>
+
+    <div class="section-label">System Design</div>
+    <a href="#concurrency">Concurrency</a>
+    <a href="#config">Config Layering</a>
+    <a href="#unix">Unix Philosophy</a>
+
+    <div class="section-label">DSA</div>
+    <a href="#dfs">DFS Tree Walk</a>
+    <a href="#greedy">Greedy Budget</a>
+    <a href="#binary">Binary Detection</a>
+    <a href="#glob">Pattern Matching</a>
+
+    <div class="section-label">Technologies</div>
+    <a href="#typescript">TypeScript</a>
+    <a href="#dependencies">Dependencies</a>
+    <a href="#toolchain">Toolchain</a>
+
+    <div class="section-label">Resume Prep</div>
+    <a href="#talking-points">Talking Points</a>
+    <a href="#quiz">Quiz Yourself</a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN -->
+<main id="main">
+
+  <!-- HERO -->
+  <div id="hero">
+    <div class="eyebrow">Personal Study Guide</div>
+    <h1><span>repo-to-prompt</span><br>How It Works</h1>
+    <p>
+      A TypeScript CLI tool that recursively walks a codebase, filters files,
+      estimates sizes, and formats everything into a single structured output.
+      Built for developers who want to share full project context efficiently.
+    </p>
+    <span class="tag-pill" style="background:rgba(79,142,247,0.12);color:var(--accent)">TypeScript</span>
+    <span class="tag-pill" style="background:rgba(16,185,129,0.12);color:var(--accent3)">Node.js</span>
+    <span class="tag-pill" style="background:rgba(245,158,11,0.12);color:var(--accent4)">CLI Tool</span>
+    <span class="tag-pill" style="background:rgba(124,58,237,0.12);color:var(--accent2)">File Systems</span>
+    <span class="tag-pill" style="background:rgba(239,68,68,0.12);color:var(--accent5)">Algorithms</span>
+  </div>
+
+
+  <!-- ══════════════════════════════════════ WHAT IT DOES -->
+  <section id="overview">
+    <h2>What It Does <span class="tag tag-arch">Overview</span></h2>
+    <p>
+      <strong>repo-to-prompt</strong> is a command-line tool that takes a directory as input and
+      produces a single text file containing every relevant source file, concatenated with clear
+      separators and a metadata header. Think of it as a "snapshot" of a codebase.
+    </p>
+
+    <h3>High-Level Behavior</h3>
+    <ol>
+      <li>You run it on a project folder</li>
+      <li>It walks every file recursively, skipping ignored paths (node_modules, .git, etc.)</li>
+      <li>It reads each file and detects if it's binary</li>
+      <li>It estimates the total size in tokens (characters ÷ 4)</li>
+      <li>If a size budget is set, it trims the largest files first</li>
+      <li>It formats everything with headers and file delimiters</li>
+      <li>It writes to stdout, a file, or the clipboard</li>
+    </ol>
+
+    <h3>Example Usage</h3>
+    <pre><code><span class="cm"># Pack current directory to stdout</span>
+node dist/index.js .
+
+<span class="cm"># Save to a file, markdown format, with a directory tree</span>
+node dist/index.js ./my-project --output context.md --format markdown --tree
+
+<span class="cm"># Only TypeScript files, cap at 80,000 tokens</span>
+node dist/index.js . --include "**/*.ts" --max-tokens 80000
+
+<span class="cm"># Only files changed since last commit</span>
+node dist/index.js . --diff HEAD~1 --copy</code></pre>
+
+    <h3>What the Output Looks Like</h3>
+    <pre><code><span class="cm"># repo-to-prompt output</span>
+<span class="cm"># Generated: 2026-03-07T10:23:01.000Z</span>
+<span class="cm"># Source: /Users/sia/my-project</span>
+<span class="cm"># Files: 12 | Estimated tokens: ~18,400</span>
+<span class="cm"># ---</span>
+
+<span class="cm">=== src/index.ts ===</span>
+<span class="str">import { Command } from 'commander';</span>
+...
+
+<span class="cm">=== src/walker.ts ===</span>
+...
+</code></pre>
+
+    <div class="callout">
+      <strong>Why this matters for your resume:</strong> This is a real developer tool with practical
+      utility — it solves a concrete problem (getting a full codebase into a readable text format)
+      using legitimate file system, algorithm, and CLI engineering.
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ PIPELINE -->
+  <section id="pipeline">
+    <h2>Execution Pipeline <span class="tag tag-arch">Architecture</span></h2>
+    <p>
+      Every time the CLI runs, it executes the same 8-stage linear pipeline.
+      Each stage has a single responsibility and passes its output to the next.
+      This is a classic <strong>pipeline pattern</strong> — easy to reason about, test, and extend.
+    </p>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n1">1</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">config.ts</div>
+          <h4>Load Config</h4>
+          <p>Reads <code>.repo2prompt.json</code> from the target directory if it exists. Returns an empty object on missing file. CLI flags override everything from this file.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n2">2</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">filter.ts</div>
+          <h4>Build Ignore Filter</h4>
+          <p>Stacks three layers of ignore rules: built-in defaults (node_modules, .git, dist…) → <code>.gitignore</code> content → user-supplied <code>--exclude</code> patterns. Uses the <code>ignore</code> package for gitignore-compatible matching.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n3">3</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">walker.ts</div>
+          <h4>Discover Files</h4>
+          <p>Recursively walks the directory tree (DFS), applying the ignore filter at each node to prune entire subtrees early. Returns a flat list of <code>{ absolutePath, relativePath }</code> entries.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n4">4</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">summarizer.ts</div>
+          <h4>Read File Contents</h4>
+          <p>Reads each file in batches of 50 concurrent reads (capped to avoid file descriptor exhaustion). Detects binary files by extension and by scanning the first 512 bytes for null bytes. Truncates files exceeding <code>--max-file-lines</code>.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n5">5</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">tokenEstimator.ts</div>
+          <h4>Estimate Total Size</h4>
+          <p>Concatenates all non-binary file contents and applies the heuristic: <code>tokens ≈ characters ÷ 4</code>. Produces a single integer representing the estimated total output size.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n6">6</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">index.ts</div>
+          <h4>Apply Token Budget</h4>
+          <p>If <code>--max-tokens</code> is set and the total exceeds it, a greedy algorithm drops or partially truncates files — largest first — until the budget is satisfied. Mutates the in-memory <code>FileBlock</code> array.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n7">7</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">formatter.ts + tree.ts</div>
+          <h4>Format Output</h4>
+          <p>Assembles the final string: metadata header → optional ASCII directory tree → one formatted block per file. Plain format wraps files with <code>=== path ===</code>. Markdown format uses <code>## heading</code> + fenced code blocks with language identifiers.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-left"><div class="pipe-num n8">8</div><div class="pipe-line"></div></div>
+        <div class="pipe-body">
+          <div class="file-badge">index.ts</div>
+          <h4>Write Output</h4>
+          <p>Writes to a file (<code>--output</code>), copies to the clipboard (<code>--copy</code>), or streams to stdout. Always prints a summary line to stderr regardless of output destination.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ MODULE BREAKDOWN -->
+  <section id="modules">
+    <h2>Module Breakdown <span class="tag tag-arch">Architecture</span></h2>
+    <p>
+      The project has 7 source modules, each with a single clearly-defined responsibility.
+      This is the <strong>Single Responsibility Principle</strong> in practice.
+    </p>
+
+    <div class="card-grid">
+      <div class="card card-accent-blue">
+        <div class="card-icon">🚀</div>
+        <h4>index.ts</h4>
+        <p>CLI entry point. Orchestrates all other modules. Owns the token budget loop. Handles output routing (file / stdout / clipboard). 225 lines.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <div class="card-icon">⚙️</div>
+        <h4>config.ts</h4>
+        <p>Loads <code>.repo2prompt.json</code>. Returns empty config on missing or invalid file. Defines the <code>Config</code> interface used across the app.</p>
+      </div>
+      <div class="card card-accent-purple">
+        <div class="card-icon">🚫</div>
+        <h4>filter.ts</h4>
+        <p>Builds the stacked ignore filter. Exports <code>DEFAULT_IGNORES</code>. Wraps the <code>ignore</code> package. Single function: <code>buildIgnoreFilter()</code>.</p>
+      </div>
+      <div class="card card-accent-purple">
+        <div class="card-icon">🚶</div>
+        <h4>walker.ts</h4>
+        <p>Recursive async DFS directory walker. Skips symlinks, applies filter, returns flat <code>FileEntry[]</code>. Filters by include glob patterns using micromatch.</p>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">📄</div>
+        <h4>summarizer.ts</h4>
+        <p>Reads file contents. Detects binary files via extension set and null-byte scan. Truncates by line count. Handles read errors gracefully.</p>
+      </div>
+      <div class="card card-accent-amber">
+        <div class="card-icon">🔢</div>
+        <h4>tokenEstimator.ts</h4>
+        <p>Two functions: <code>estimateTokens()</code> and <code>formatTokenCount()</code>. Pure functions with no side effects. The entire module is 15 lines.</p>
+      </div>
+      <div class="card card-accent-amber">
+        <div class="card-icon">✏️</div>
+        <h4>formatter.ts</h4>
+        <p>Builds the output header, formats each file block (plain or markdown), and assembles the final string. Contains the 60+ entry language map for syntax highlighting.</p>
+      </div>
+      <div class="card card-accent-red">
+        <div class="card-icon">🌲</div>
+        <h4>tree.ts</h4>
+        <p>Generates an ASCII directory tree with proper <code>├──</code> and <code>└──</code> connectors. Uses the same ignore filter as the walker to hide filtered paths.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ DATA FLOW -->
+  <section id="data-flow">
+    <h2>Data Flow <span class="tag tag-arch">Architecture</span></h2>
+    <p>Data passes through the pipeline as these TypeScript types:</p>
+
+    <div class="flow">  CLI args + .repo2prompt.json
+         │
+         ▼
+  <span style="color:var(--accent)">FilterConfig</span>  →  <span style="color:var(--accent)">Ignore</span>   (ignore filter object)
+         │
+         ▼
+  <span style="color:var(--accent2)">WalkOptions</span>  →  <span style="color:var(--accent2)">FileEntry[]</span>
+                       { absolutePath: string
+                         relativePath: string }[]
+         │
+         ▼ (read each file)
+  <span style="color:var(--accent3)">FileBlock[]</span>
+    { relativePath: string
+      content:      string    ← may be mutated by budget loop
+      isBinary:     boolean
+      wasTruncated: boolean
+      totalLines:   number }
+         │
+         ▼ (format each block)
+  <span style="color:var(--accent4)">string[]</span>   (formatted file blocks)
+         │
+         ▼ (assemble)
+  <span style="color:var(--accent4)">string</span>     (final output — header + tree + blocks)
+         │
+         ▼
+  stdout / file / clipboard</div>
+
+    <p>
+      Notice that <code>FileBlock</code> objects are <strong>mutated in-place</strong> during the token budget loop —
+      the content field is overwritten. This is the one place in the codebase where mutation is used
+      instead of creating new objects. It keeps the budget loop simple but is worth knowing when debugging.
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ DESIGN PATTERNS -->
+  <section id="patterns">
+    <h2>Design Patterns <span class="tag tag-arch">Architecture</span></h2>
+
+    <h3>Pipeline Pattern</h3>
+    <p>
+      The entire CLI is a linear pipeline where each stage has a defined input and output type.
+      This makes each stage independently testable and the overall flow easy to trace.
+      This is also sometimes called the <strong>Chain of Responsibility</strong> pattern.
+    </p>
+
+    <h3>Strategy Pattern (Output Format)</h3>
+    <p>
+      The <code>OutputFormat</code> type (<code>'plain' | 'markdown'</code>) acts as a strategy selector.
+      <code>formatFileBlock(block, format)</code> branches on it to produce different output structures.
+      Adding a new format (e.g., JSON) only requires extending one function.
+    </p>
+<pre><code><span class="cm">// formatter.ts — strategy selection</span>
+<span class="kw">export function</span> <span class="fn">formatFileBlock</span>(<span class="var">block</span>: <span class="ty">FileBlock</span>, <span class="var">format</span>: <span class="ty">OutputFormat</span>): <span class="ty">string</span> {
+  <span class="kw">if</span> (<span class="var">format</span> === <span class="str">'markdown'</span>) {
+    <span class="kw">return</span> <span class="str">`## <span class="var">${block.relativePath}</span>\n\n\`\`\`<span class="var">${lang}</span>\n<span class="var">${block.content}</span>\n\`\`\`\n\n`</span>;
+  }
+  <span class="kw">return</span> <span class="str">`=== <span class="var">${block.relativePath}</span> ===\n<span class="var">${block.content}</span>\n\n`</span>;
+}</code></pre>
+
+    <h3>Layered Configuration (Precedence Chain)</h3>
+    <p>
+      Three layers of configuration are merged with explicit precedence:
+      <strong>defaults → config file → CLI flags</strong>. Each layer can override the previous.
+      This is the same pattern used by tools like ESLint, Prettier, and webpack.
+    </p>
+<pre><code><span class="cm">// index.ts — CLI flags win over file config</span>
+<span class="kw">const</span> <span class="var">maxFileLines</span> = <span class="var">opts</span>.<span class="var">maxFileLines</span> ?? <span class="var">fileConfig</span>.<span class="var">maxFileLines</span> ?? <span class="num">500</span>;</code></pre>
+
+    <h3>Graceful Degradation</h3>
+    <p>
+      Every I/O operation that might fail is wrapped with a try/catch that returns a safe fallback
+      rather than crashing. Read permission errors, malformed JSON config, missing gitignore —
+      all are silently skipped or logged to stderr without halting execution.
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ CONCURRENCY -->
+  <section id="concurrency">
+    <h2>Concurrency Control <span class="tag tag-sys">System Design</span></h2>
+    <p>
+      Reading files is the most I/O-intensive part of the pipeline. The naive approach —
+      <code>Promise.all(files.map(readFile))</code> — would open every file simultaneously.
+      On a large repo, this exhausts the operating system's file descriptor limit.
+    </p>
+
+    <h3>The Batch Semaphore Pattern</h3>
+    <p>
+      The solution is a manual batch loop with a fixed concurrency cap of <strong>50</strong>.
+      This is equivalent to a semaphore (or a worker pool) with 50 slots:
+    </p>
+<pre><code><span class="cm">// index.ts — batched concurrent reads</span>
+<span class="kw">const</span> <span class="var">CONCURRENCY</span> = <span class="num">50</span>;
+<span class="kw">const</span> <span class="var">fileBlocks</span>: <span class="ty">FileBlock[]</span> = [];
+
+<span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> < <span class="var">files</span>.<span class="var">length</span>; <span class="var">i</span> += <span class="var">CONCURRENCY</span>) {
+  <span class="kw">const</span> <span class="var">batch</span> = <span class="var">files</span>.<span class="fn">slice</span>(<span class="var">i</span>, <span class="var">i</span> + <span class="var">CONCURRENCY</span>);
+  <span class="kw">const</span> <span class="var">results</span> = <span class="kw">await</span> <span class="ty">Promise</span>.<span class="fn">all</span>(<span class="var">batch</span>.<span class="fn">map</span>(<span class="kw">async</span> (<span class="var">file</span>) => {
+    <span class="kw">const</span> <span class="var">fc</span> = <span class="kw">await</span> <span class="fn">readFileContent</span>(<span class="var">file</span>.<span class="var">absolutePath</span>, <span class="var">maxFileLines</span>);
+    <span class="kw">return</span> { <span class="var">relativePath</span>: <span class="var">file</span>.<span class="var">relativePath</span>, ...<span class="var">fc</span> };
+  }));
+  <span class="var">fileBlocks</span>.<span class="fn">push</span>(...<span class="var">results</span>);
+}</code></pre>
+
+    <h3>Why Exactly 50?</h3>
+    <p>
+      Most Unix systems have a default per-process limit of 1024 open file descriptors.
+      With system files, stdio (0,1,2), and other overhead, 50 concurrent file reads is
+      safely under any reasonable limit while still achieving significant parallelism.
+    </p>
+
+    <div class="callout">
+      <strong>Interview angle:</strong> "I chose a batched concurrency model with Promise.all to parallelize I/O without
+      exhausting file descriptors. The 50-file cap is a pragmatic safety margin well under the OS limit."
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ CONFIG LAYERING -->
+  <section id="config">
+    <h2>Configuration Layering <span class="tag tag-sys">System Design</span></h2>
+    <p>
+      The tool accepts configuration from two sources, merged with a clear precedence order.
+      This design lets users set project-level defaults while always being able to override
+      them from the command line.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Option</th><th>Config File Default</th><th>CLI Override</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>format</td><td><code>.repo2prompt.json → format</code></td><td><code>--format</code></td></tr>
+        <tr><td>maxFileLines</td><td><code>.repo2prompt.json → maxFileLines</code></td><td><code>--max-file-lines</code></td></tr>
+        <tr><td>maxTokens</td><td><code>.repo2prompt.json → maxTokens</code></td><td><code>--max-tokens</code></td></tr>
+        <tr><td>exclude</td><td><code>.repo2prompt.json → exclude[]</code></td><td><code>--exclude</code> (additive)</td></tr>
+        <tr><td>include</td><td><code>.repo2prompt.json → include[]</code></td><td><code>--include</code> (additive)</td></tr>
+        <tr><td>noGitignore</td><td><code>.repo2prompt.json → noGitignore</code></td><td><code>--no-gitignore</code></td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      Note that <code>exclude</code> and <code>include</code> patterns are <strong>additive</strong>:
+      config file patterns and CLI patterns are merged into a single array.
+      This lets you define base exclusions in the config and add temporary ones at the CLI.
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ UNIX PHILOSOPHY -->
+  <section id="unix">
+    <h2>Unix Philosophy <span class="tag tag-sys">System Design</span></h2>
+    <p>The CLI follows core Unix design principles:</p>
+
+    <div class="card-grid">
+      <div class="card card-accent-green">
+        <h4>stdout for data, stderr for diagnostics</h4>
+        <p>All file content goes to stdout so it can be piped. The summary line (<code>✓ 42 files | ~18,400 tokens</code>) always goes to stderr so it's visible even when piping output.</p>
+      </div>
+      <div class="card card-accent-green">
+        <h4>Do one thing well</h4>
+        <p>Reads a directory, produces text. No transformation, no analysis, no inference. This makes it composable with other tools via pipes.</p>
+      </div>
+      <div class="card card-accent-green">
+        <h4>Silent success</h4>
+        <p>The tool writes nothing to stdout when <code>--output</code> or <code>--copy</code> is used — only the stderr summary. Programs should not print unnecessary output on success.</p>
+      </div>
+      <div class="card card-accent-green">
+        <h4>Non-zero exit on error</h4>
+        <p>All caught errors call <code>process.exit(1)</code> with a message to stderr. Piped workflows can detect failure through exit codes.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ DFS -->
+  <section id="dfs">
+    <h2>DFS Tree Traversal <span class="tag tag-dsa">DSA</span></h2>
+    <p>
+      The core algorithm for discovering files is a <strong>recursive Depth-First Search (DFS)</strong>
+      over the file system tree. The walker visits a directory, then recurses into each subdirectory
+      before moving to the next sibling — the classic pre-order DFS.
+    </p>
+
+    <h3>Why DFS (not BFS)?</h3>
+    <ul>
+      <li>DFS uses a call stack (O(depth) space) instead of a queue (O(width) space). File trees are typically deep, not wide.</li>
+      <li>DFS naturally produces paths grouped by directory, which makes the output more readable.</li>
+      <li>The ignore filter can prune entire subtrees early: when a directory is ignored, the recursion simply doesn't happen.</li>
+    </ul>
+
+    <h3>The Actual Implementation</h3>
+<pre><code><span class="cm">// walker.ts — recursive async DFS</span>
+<span class="kw">async function</span> <span class="fn">walkDir</span>(
+  <span class="var">dir</span>: <span class="ty">string</span>,
+  <span class="var">rootDir</span>: <span class="ty">string</span>,
+  <span class="var">ignoreFilter</span>: <span class="ty">Ignore</span>,
+  <span class="var">results</span>: <span class="ty">FileEntry[]</span>,  <span class="cm">// output accumulator — passed by reference</span>
+): <span class="ty">Promise</span>&lt;<span class="ty">void</span>&gt; {
+  <span class="kw">const</span> <span class="var">entries</span> = <span class="kw">await</span> <span class="fn">readdir</span>(<span class="var">dir</span>);
+
+  <span class="kw">for</span> (<span class="kw">const</span> <span class="var">entry</span> <span class="kw">of</span> <span class="var">entries</span>) {
+    <span class="kw">const</span> <span class="var">absolutePath</span> = <span class="fn">join</span>(<span class="var">dir</span>, <span class="var">entry</span>);
+    <span class="kw">const</span> <span class="var">relativePath</span> = <span class="fn">relative</span>(<span class="var">rootDir</span>, <span class="var">absolutePath</span>).<span class="fn">replace</span>(<span class="str">/\\/g</span>, <span class="str">'/'</span>);
+
+    <span class="cm">// Skip symlinks to prevent infinite loops</span>
+    <span class="kw">if</span> (<span class="var">entryStats</span>.<span class="fn">isSymbolicLink</span>()) <span class="kw">continue</span>;
+
+    <span class="cm">// Prune entire subtrees — this is what makes DFS efficient here</span>
+    <span class="kw">if</span> (<span class="var">ignoreFilter</span>.<span class="fn">ignores</span>(<span class="var">relativePath</span>)) <span class="kw">continue</span>;
+
+    <span class="kw">if</span> (<span class="var">isDir</span>) {
+      <span class="kw">await</span> <span class="fn">walkDir</span>(<span class="var">absolutePath</span>, <span class="var">rootDir</span>, <span class="var">ignoreFilter</span>, <span class="var">results</span>); <span class="cm">// recurse</span>
+    } <span class="kw">else</span> {
+      <span class="var">results</span>.<span class="fn">push</span>({ <span class="var">absolutePath</span>, <span class="var">relativePath</span> }); <span class="cm">// leaf node → add to output</span>
+    }
+  }
+}</code></pre>
+
+    <h3>Complexity</h3>
+    <ul>
+      <li><strong>Time:</strong> O(N) where N = number of files and directories visited. Each node is visited exactly once.</li>
+      <li><strong>Space:</strong> O(D) call stack depth where D = max directory depth. Plus O(F) for the results array where F = number of matching files.</li>
+      <li><strong>Pruning:</strong> When a directory is ignored, none of its children are visited — the effective N is much smaller than the total file count.</li>
+    </ul>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ GREEDY -->
+  <section id="greedy">
+    <h2>Greedy Token Budget <span class="tag tag-dsa">DSA</span></h2>
+    <p>
+      When the total output exceeds <code>--max-tokens</code>, the tool must reduce the output size.
+      It uses a <strong>greedy algorithm</strong>: sort files by size descending, then remove or
+      truncate the largest ones first until the budget is met.
+    </p>
+
+    <h3>Why Greedy?</h3>
+    <p>
+      The optimal solution (minimize files removed while staying under budget) is essentially the
+      <strong>Knapsack Problem</strong>, which is NP-complete. For a CLI tool that needs to run in
+      milliseconds, greedy is the right trade-off: it finds a good (though not always perfect)
+      solution in O(N log N) time.
+    </p>
+
+    <h3>The Algorithm</h3>
+<pre><code><span class="cm">// index.ts — greedy token budget reduction</span>
+
+<span class="cm">// Step 1: Sort non-binary blocks largest first — O(N log N)</span>
+<span class="kw">const</span> <span class="var">nonBinaryBlocks</span> = <span class="var">fileBlocks</span>
+  .<span class="fn">filter</span>(<span class="var">b</span> => !<span class="var">b</span>.<span class="var">isBinary</span> && <span class="var">b</span>.<span class="var">content</span>.<span class="var">length</span> > <span class="num">0</span>)
+  .<span class="fn">sort</span>((<span class="var">a</span>, <span class="var">b</span>) => <span class="var">b</span>.<span class="var">content</span>.<span class="var">length</span> - <span class="var">a</span>.<span class="var">content</span>.<span class="var">length</span>);
+
+<span class="kw">let</span> <span class="var">remaining</span> = <span class="var">totalTokens</span> - <span class="var">maxTokens</span>; <span class="cm">// tokens we need to remove</span>
+
+<span class="cm">// Step 2: Greedily remove until budget is met — O(N)</span>
+<span class="kw">for</span> (<span class="kw">const</span> <span class="var">block</span> <span class="kw">of</span> <span class="var">nonBinaryBlocks</span>) {
+  <span class="kw">if</span> (<span class="var">remaining</span> <= <span class="num">0</span>) <span class="kw">break</span>;
+  <span class="kw">const</span> <span class="var">blockTokens</span> = <span class="fn">estimateTokens</span>(<span class="var">block</span>.<span class="var">content</span>);
+
+  <span class="kw">if</span> (<span class="var">blockTokens</span> <= <span class="var">remaining</span>) {
+    <span class="cm">// This file is smaller than what we still need to remove — drop entirely</span>
+    <span class="var">remaining</span> -= <span class="var">blockTokens</span>;
+    <span class="var">block</span>.<span class="var">content</span> = <span class="str">'[file omitted: token budget exceeded]'</span>;
+  } <span class="kw">else</span> {
+    <span class="cm">// This file is larger than needed — partially truncate it</span>
+    <span class="kw">const</span> <span class="var">keepChars</span> = (<span class="var">blockTokens</span> - <span class="var">remaining</span>) * <span class="num">4</span>;
+    <span class="cm">// ... truncate block.content to keepChars characters by lines</span>
+    <span class="kw">break</span>;
+  }
+}</code></pre>
+
+    <div class="callout warn">
+      <strong>Nuance:</strong> The algorithm processes the largest file first. If that file alone covers
+      the entire excess, it's partially truncated and the loop exits. If it's smaller than the excess,
+      it's dropped entirely and the loop continues. This means smaller files are always dropped before larger
+      ones are partially truncated — a "drop whole files first" strategy.
+    </div>
+
+    <h3>Complexity</h3>
+    <ul>
+      <li><strong>Sort:</strong> O(N log N) — standard comparison sort</li>
+      <li><strong>Greedy loop:</strong> O(N) — one pass through the sorted list</li>
+      <li><strong>Overall:</strong> O(N log N) dominated by the sort</li>
+    </ul>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ BINARY DETECTION -->
+  <section id="binary">
+    <h2>Binary File Detection <span class="tag tag-dsa">DSA</span></h2>
+    <p>
+      Including binary files (images, executables, fonts) in the text output would produce garbage.
+      The tool uses a two-layer detection strategy:
+    </p>
+
+    <h3>Layer 1: Extension Set Lookup — O(1)</h3>
+    <p>
+      A <code>Set</code> of ~40 known binary extensions (<code>.png</code>, <code>.exe</code>,
+      <code>.zip</code>, etc.) is checked first. Set lookup is O(1), making this the fast path
+      for known binary types.
+    </p>
+<pre><code><span class="kw">const</span> <span class="var">BINARY_EXTENSIONS</span> = <span class="kw">new</span> <span class="ty">Set</span>([
+  <span class="str">'.png'</span>, <span class="str">'.jpg'</span>, <span class="str">'.gif'</span>, <span class="str">'.webp'</span>,  <span class="cm">// images</span>
+  <span class="str">'.mp3'</span>, <span class="str">'.mp4'</span>, <span class="str">'.wav'</span>,           <span class="cm">// media</span>
+  <span class="str">'.zip'</span>, <span class="str">'.tar'</span>, <span class="str">'.gz'</span>,            <span class="cm">// archives</span>
+  <span class="str">'.exe'</span>, <span class="str">'.dll'</span>, <span class="str">'.dylib'</span>,         <span class="cm">// binaries</span>
+  <span class="cm">// ... ~40 total</span>
+]);
+
+<span class="kw">function</span> <span class="fn">isBinaryExtension</span>(<span class="var">filePath</span>: <span class="ty">string</span>): <span class="ty">boolean</span> {
+  <span class="kw">return</span> <span class="var">BINARY_EXTENSIONS</span>.<span class="fn">has</span>(<span class="fn">extname</span>(<span class="var">filePath</span>).<span class="fn">toLowerCase</span>());
+}</code></pre>
+
+    <h3>Layer 2: Null-Byte Content Scan — O(min(N, 512))</h3>
+    <p>
+      If the extension isn't recognized, the file's first 512 bytes are scanned for null bytes
+      (<code>0x00</code>). Binary files almost always contain null bytes; text files almost never do.
+      Scanning only 512 bytes keeps this fast regardless of file size.
+    </p>
+<pre><code><span class="kw">function</span> <span class="fn">hasBinaryContent</span>(<span class="var">buffer</span>: <span class="ty">Buffer</span>): <span class="ty">boolean</span> {
+  <span class="kw">const</span> <span class="var">checkLength</span> = <span class="ty">Math</span>.<span class="fn">min</span>(<span class="var">buffer</span>.<span class="var">length</span>, <span class="num">512</span>);
+  <span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> < <span class="var">checkLength</span>; <span class="var">i</span>++) {
+    <span class="kw">if</span> (<span class="var">buffer</span>[<span class="var">i</span>] === <span class="num">0</span>) <span class="kw">return</span> <span class="kw">true</span>;
+  }
+  <span class="kw">return</span> <span class="kw">false</span>;
+}</code></pre>
+
+    <div class="callout green">
+      <strong>This is the same heuristic used by Git</strong> to detect binary files when deciding
+      whether to show a diff. It's a well-established technique in the industry.
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ GLOB MATCHING -->
+  <section id="glob">
+    <h2>Glob Pattern Matching <span class="tag tag-dsa">DSA</span></h2>
+    <p>
+      Two separate pattern-matching systems handle file filtering:
+    </p>
+
+    <h3>1. Ignore Filter — gitignore semantics (the <code>ignore</code> package)</h3>
+    <p>
+      Used for <code>--exclude</code> patterns and <code>.gitignore</code>. The <code>ignore</code>
+      package implements the full gitignore specification, including negation patterns (<code>!important.ts</code>),
+      directory-only patterns (<code>docs/</code>), and relative patterns.
+    </p>
+
+    <h3>2. Include Filter — glob semantics (micromatch)</h3>
+    <p>
+      Used for <code>--include</code> patterns. After the walker collects all non-ignored files,
+      micromatch filters the result list by the include patterns. Supports <code>**</code> (any depth),
+      <code>*</code> (any name), and brace expansion like <code>*.{ts,js}</code>.
+    </p>
+<pre><code><span class="cm">// walker.ts — include filtering applied after full walk</span>
+<span class="kw">return</span> <span class="var">results</span>.<span class="fn">filter</span>((<span class="var">f</span>) =>
+  <span class="fn">micromatch</span>([<span class="var">f</span>.<span class="var">relativePath</span>], <span class="var">options</span>.<span class="var">includePatterns</span>, { <span class="var">dot</span>: <span class="kw">true</span> }).<span class="var">length</span> > <span class="num">0</span>
+);</code></pre>
+
+    <h3>Why Two Libraries?</h3>
+    <p>
+      Gitignore patterns and glob patterns have different semantics. <code>ignore</code> is optimized
+      for gitignore-style exclusion (stateful, layered). <code>micromatch</code> is optimized for
+      shell-style glob matching (stateless, per-file). Using the right tool for each job avoids
+      edge-case bugs from trying to unify them.
+    </p>
+
+    <h3>Path Normalization</h3>
+    <p>
+      On Windows, <code>path.relative()</code> returns backslash-separated paths.
+      Both <code>ignore</code> and <code>micromatch</code> expect forward slashes.
+      Every relative path is normalized with <code>.replace(/\\/g, '/')</code> before any pattern matching.
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ TYPESCRIPT -->
+  <section id="typescript">
+    <h2>TypeScript <span class="tag tag-tech">Technologies</span></h2>
+    <p>The project uses TypeScript in strict mode — every feature that can catch bugs at compile time is enabled.</p>
+
+    <h3>Key TypeScript Features Used</h3>
+
+    <div class="card-grid">
+      <div class="card card-accent-blue">
+        <h4>Discriminated Unions</h4>
+        <p><code>OutputFormat = 'plain' | 'markdown'</code> is a string literal union used as a type-safe strategy selector throughout the codebase.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>Optional Chaining + Nullish Coalescing</h4>
+        <p><code>opts.maxFileLines ?? fileConfig.maxFileLines ?? 500</code> — clean multi-level fallback without null checks or if-else chains.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>Async/Await + Promise.all</h4>
+        <p>All I/O is async. Batch reads use <code>Promise.all(batch.map(async ...))</code> for parallel execution within each batch.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>Interface-First Design</h4>
+        <p>Every module defines its own interfaces (<code>FileBlock</code>, <code>WalkOptions</code>, <code>Config</code>) before implementing functions, creating clear contracts between modules.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>ESM Modules</h4>
+        <p><code>"type": "module"</code> in package.json. All imports use <code>.js</code> extensions (required for ESM in Node.js, even for <code>.ts</code> source files).</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>Type-Only Imports</h4>
+        <p><code>import type { Ignore } from 'ignore'</code> — the <code>type</code> keyword imports only the TypeScript type, not the runtime value. Eliminates unused runtime imports.</p>
+      </div>
+    </div>
+
+    <h3>tsconfig Highlights</h3>
+    <pre><code>{
+  <span class="str">"target"</span>: <span class="str">"ES2022"</span>,           <span class="cm">// modern JS, supports top-level await</span>
+  <span class="str">"module"</span>: <span class="str">"ESNext"</span>,           <span class="cm">// native ESM output</span>
+  <span class="str">"moduleResolution"</span>: <span class="str">"bundler"</span>, <span class="cm">// resolves .ts files without extensions</span>
+  <span class="str">"strict"</span>: <span class="kw">true</span>,               <span class="cm">// all strict checks enabled</span>
+  <span class="str">"declaration"</span>: <span class="kw">true</span>,         <span class="cm">// generate .d.ts for library consumers</span>
+  <span class="str">"sourceMap"</span>: <span class="kw">true</span>            <span class="cm">// stack traces point to .ts source</span>
+}</code></pre>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ DEPENDENCIES -->
+  <section id="dependencies">
+    <h2>Dependencies <span class="tag tag-tech">Technologies</span></h2>
+
+    <h3>Runtime Dependencies</h3>
+    <table>
+      <thead><tr><th>Package</th><th>Purpose</th><th>Why not roll your own?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>commander</td>
+          <td>CLI argument parsing, help text generation, subcommand support</td>
+          <td>Handles edge cases like negation flags (<code>--no-gitignore</code>), optional args (<code>--diff [ref]</code>), and auto-generates <code>--help</code></td>
+        </tr>
+        <tr>
+          <td>ignore</td>
+          <td>gitignore-spec pattern matching</td>
+          <td>The gitignore spec has many edge cases (negation, anchored patterns, directory-only). This library implements the full spec correctly.</td>
+        </tr>
+        <tr>
+          <td>micromatch</td>
+          <td>Shell-style glob pattern matching</td>
+          <td>Handles <code>**</code> properly, brace expansion, extglobs, and dot-file matching consistently across platforms</td>
+        </tr>
+        <tr>
+          <td>clipboardy</td>
+          <td>Cross-platform clipboard read/write</td>
+          <td>Clipboard APIs differ between macOS (pbcopy), Linux (xclip/xsel), and Windows (clip). This abstracts all three.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Dev Dependencies</h3>
+    <table>
+      <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>tsup</td><td>TypeScript bundler. Produces a single <code>dist/index.js</code> with a <code>#!/usr/bin/env node</code> shebang. Zero config needed.</td></tr>
+        <tr><td>tsx</td><td>TypeScript executor for development (<code>npm run dev</code>). Runs <code>.ts</code> files directly without a build step.</td></tr>
+        <tr><td>vitest</td><td>Test runner. Compatible with Jest's API. Supports TypeScript natively without extra config.</td></tr>
+        <tr><td>typescript</td><td>Type checker (<code>tsc --noEmit</code> for linting). tsup uses esbuild for actual compilation.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Note:</strong> <code>fast-glob</code> is listed as a dependency in <code>package.json</code> but is never imported anywhere.
+      This is a dead dependency that can be removed with <code>npm uninstall fast-glob</code>.
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ TOOLCHAIN -->
+  <section id="toolchain">
+    <h2>Toolchain <span class="tag tag-tech">Technologies</span></h2>
+
+    <h3>Build: tsup</h3>
+    <p>
+      tsup bundles all source files into a single <code>dist/index.js</code>. It uses
+      <strong>esbuild</strong> internally (written in Go), making it significantly faster than
+      <code>tsc</code> for compilation. The <code>banner: { js: '#!/usr/bin/env node' }</code>
+      config prepends the Unix shebang so the output file is directly executable.
+    </p>
+
+    <h3>Testing: Vitest</h3>
+    <p>
+      Tests use temporary directories (via <code>os.tmpdir()</code> + <code>mkdtemp</code>)
+      created in <code>beforeEach</code> and deleted in <code>afterEach</code>. This is the
+      <strong>test isolation</strong> pattern — each test gets a clean filesystem sandbox with
+      no state shared between tests.
+    </p>
+<pre><code><span class="kw">let</span> <span class="var">tmpDir</span>: <span class="ty">string</span>;
+
+<span class="fn">beforeEach</span>(<span class="kw">async</span> () => {
+  <span class="cm">// Create a fresh temp directory for each test</span>
+  <span class="var">tmpDir</span> = <span class="kw">await</span> <span class="fn">mkdtemp</span>(<span class="fn">join</span>(<span class="fn">tmpdir</span>(), <span class="str">'repo2prompt-test-'</span>));
+});
+
+<span class="fn">afterEach</span>(() => {
+  <span class="cm">// Always clean up, even if the test fails</span>
+  <span class="fn">rmSync</span>(<span class="var">tmpDir</span>, { <span class="var">recursive</span>: <span class="kw">true</span>, <span class="var">force</span>: <span class="kw">true</span> });
+});</code></pre>
+
+    <h3>Test Coverage by Module</h3>
+    <table>
+      <thead><tr><th>Module</th><th>Coverage</th><th>What's Tested</th></tr></thead>
+      <tbody>
+        <tr><td>filter.ts</td><td style="color:var(--accent3)">Full</td><td>Default ignores, gitignore loading, custom patterns, pattern stacking</td></tr>
+        <tr><td>formatter.ts</td><td style="color:var(--accent3)">Full</td><td>Header metadata, plain/markdown formats, binary/truncated notes, language IDs</td></tr>
+        <tr><td>walker.ts</td><td style="color:var(--accent3)">Full</td><td>Flat dirs, nested dirs, ignore filtering, include patterns, empty dirs</td></tr>
+        <tr><td>summarizer.ts</td><td style="color:var(--accent5)">None</td><td>Not tested — binary detection, truncation, error handling are untested</td></tr>
+        <tr><td>config.ts</td><td style="color:var(--accent5)">None</td><td>Not tested — missing file, invalid JSON handling are untested</td></tr>
+        <tr><td>tree.ts</td><td style="color:var(--accent5)">None</td><td>Not tested — ASCII formatting, ignore integration are untested</td></tr>
+        <tr><td>index.ts</td><td style="color:var(--accent5)">None</td><td>No integration tests for the full pipeline</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ RESUME TALKING POINTS -->
+  <section id="talking-points">
+    <h2>Resume Talking Points <span class="tag tag-resume">Resume</span></h2>
+    <p>These are things you built that are worth discussing in interviews. Each maps to a real engineering decision in the code.</p>
+
+    <h3>What to Say on Your Resume</h3>
+    <div class="callout green">
+      "Built a TypeScript CLI tool that recursively walks codebases, applies layered ignore filtering,
+      and produces optimized text output — featuring async batched I/O, a greedy file-trimming algorithm,
+      and dual output formats (plain text and Markdown with syntax highlighting)."
+    </div>
+
+    <h3>Architecture Questions</h3>
+    <div class="card-grid">
+      <div class="card card-accent-blue">
+        <h4>"Walk me through the architecture."</h4>
+        <p>8-stage linear pipeline. Each stage owns one responsibility. Data flows as typed interfaces between stages: Config → Ignore filter → FileEntry[] → FileBlock[] → string.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>"How do you handle configuration?"</h4>
+        <p>Three-layer precedence: hardcoded defaults → .repo2prompt.json → CLI flags. Same pattern as ESLint/Prettier. CLI flags always win. Exclude patterns are additive across layers.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <h4>"How would you add a new output format?"</h4>
+        <p>Add a new value to the <code>OutputFormat</code> union type in formatter.ts, then add a branch in <code>formatFileBlock()</code>. No other files need changes.</p>
+      </div>
+    </div>
+
+    <h3>System Design Questions</h3>
+    <div class="card-grid">
+      <div class="card card-accent-purple">
+        <h4>"How do you handle large repositories?"</h4>
+        <p>Batched concurrent reads (50 at a time) to avoid file descriptor exhaustion. Token budget with greedy trimming. Line-level truncation for individual large files.</p>
+      </div>
+      <div class="card card-accent-purple">
+        <h4>"What happens on read errors?"</h4>
+        <p>Graceful degradation everywhere. Failed reads return an error message string instead of throwing. Permission-denied directories are silently skipped. The tool never crashes on I/O errors.</p>
+      </div>
+      <div class="card card-accent-purple">
+        <h4>"How does stdout vs stderr work?"</h4>
+        <p>File content always goes to stdout (pipeable). The human-readable summary (file count, token count) always goes to stderr (always visible). This follows Unix convention.</p>
+      </div>
+    </div>
+
+    <h3>Algorithm/DSA Questions</h3>
+    <div class="card-grid">
+      <div class="card card-accent-amber">
+        <h4>"What algorithm does the file walker use?"</h4>
+        <p>Recursive async DFS. Ignore filter prunes entire subtrees early — when a directory is filtered, we never recurse into it. O(N) time over visited nodes.</p>
+      </div>
+      <div class="card card-accent-amber">
+        <h4>"How does the token budget work?"</h4>
+        <p>Greedy algorithm: sort files by size descending, remove largest first. O(N log N). An approximation of the NP-hard knapsack problem — optimal algorithm would be too slow for a CLI.</p>
+      </div>
+      <div class="card card-accent-amber">
+        <h4>"How do you detect binary files?"</h4>
+        <p>Two-layer: O(1) extension Set lookup first, then O(512) null-byte scan of file header. Same heuristic Git uses. Early exit avoids reading the full file for known binary extensions.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ QUIZ -->
+  <section id="quiz">
+    <h2>Quiz Yourself <span class="tag tag-resume">Resume</span></h2>
+    <p>Click any question to reveal the answer.</p>
+
+    <div class="quiz">
+      <h4>Architecture</h4>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        What TypeScript type carries file data from the walker to the formatter?
+      </div>
+      <div class="quiz-a"><code>FileBlock[]</code> — each block has <code>relativePath</code>, <code>content</code>, <code>isBinary</code>, <code>wasTruncated</code>, and <code>totalLines</code>.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Which module is responsible for detecting and skipping binary files?
+      </div>
+      <div class="quiz-a"><code>summarizer.ts</code> — via extension set lookup and null-byte scanning. The walker doesn't know about binary status.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        In what order are config layers applied, and which wins?
+      </div>
+      <div class="quiz-a">Defaults → <code>.repo2prompt.json</code> → CLI flags. CLI flags always win (highest precedence). Exclude patterns are merged (additive).</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Why does the tree generator have its own directory traversal instead of reusing the walker?
+      </div>
+      <div class="quiz-a">Architectural gap — they were built separately. Both implement similar DFS logic independently. This is duplicate code and could be unified, but it works correctly as-is.</div>
+    </div>
+
+    <div class="quiz">
+      <h4>Algorithms</h4>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        What is the time complexity of the file discovery (walker)?
+      </div>
+      <div class="quiz-a">O(N) where N is the number of nodes visited. With ignore pruning, N is often much smaller than the total file count. Each node is visited exactly once.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Why use greedy for token budget trimming instead of an optimal algorithm?
+      </div>
+      <div class="quiz-a">The optimal solution is NP-hard (Knapsack Problem). Greedy runs in O(N log N) — fast enough for a CLI. The greedy solution is a good approximation and the exactness doesn't matter here.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        How many bytes does the null-byte binary scan inspect, and why that number?
+      </div>
+      <div class="quiz-a">512 bytes. This is enough to reliably detect binary content while keeping the check cheap. Binary files almost always have null bytes in the first 512 bytes; text files almost never do. This is the same heuristic Git uses.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Why is path normalization to forward slashes necessary in the walker?
+      </div>
+      <div class="quiz-a">On Windows, <code>path.relative()</code> returns backslash-separated paths. Both the <code>ignore</code> and <code>micromatch</code> libraries expect forward slashes. Without normalization, pattern matching would silently fail on Windows.</div>
+    </div>
+
+    <div class="quiz">
+      <h4>System Design</h4>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Why is file reading limited to 50 concurrent operations?
+      </div>
+      <div class="quiz-a">The OS limits open file descriptors per process (typically 1024 on Unix). Reading all files simultaneously could exhaust this limit. 50 concurrent reads is a safe cap that still provides meaningful parallelism.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        Why does the summary line always go to stderr, not stdout?
+      </div>
+      <div class="quiz-a">Unix convention: stdout is for data (pipeable), stderr is for diagnostics. If the summary went to stdout, it would contaminate the output when piping to another program.</div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        What does the --diff flag do, and what could go wrong with it?
+      </div>
+      <div class="quiz-a">It runs <code>git diff --name-only &lt;ref&gt;</code> and uses the changed files as the include list. The ref comes from user input and is passed unquoted into a shell command — a potential shell injection vulnerability if the ref contains shell metacharacters.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const navLinks = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
